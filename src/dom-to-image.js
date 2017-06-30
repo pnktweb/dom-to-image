@@ -228,30 +228,39 @@
                 });
 
             function cloneStyle() {
-                var sourceClone = original.cloneNode();
+				var sourceClone = original.cloneNode();
 				var sourceCloneStyle = window.getComputedStyle(sourceClone);
 
-				var parentRect = original.offsetParent.getBoundingClientRect();
+				var parentRect = original.offsetParent && original.offsetParent.getBoundingClientRect();
 				var rect = original.getBoundingClientRect();
 
-                copyStyle(window.getComputedStyle(original), clone.style);
+				copyStyle(window.getComputedStyle(original), clone.style);
 
-                function copyStyle(source, target) {
-                    if (source.cssText) target.cssText = source.cssText;
-                    else copyProperties(source, target);
+				function copyStyle(source, target) {
+					if (source.cssText) target.cssText = source.cssText;
+					else copyProperties(source, target);
 
-                    function copyProperties(source, target) {
-                        util.asArray(source).forEach(function(name) {
+					function copyProperties(source, target) {
+						util.asArray(source).forEach(function(name) {
 							var priority = source.getPropertyPriority(name);
 							var value;
 							if (name === 'margin-left' || name === 'margin-right') {
 								var sourceCloneValue = sourceCloneStyle.getPropertyValue(name);
 								if (sourceCloneValue === 'auto') {
-									if (name === 'margin-left') {
-										value = rect.left - parentRect.left;
+									if (parentRect) {
+										if (name === 'margin-left') {
+											value = rect.left - parentRect.left;
+										} else {
+											value = parentRect.right - rect.right;
+										}
 									} else {
-										value = parentRect.right - rect.right;
+										if (name === 'margin-left') {
+											value = rect.left;
+										} else {
+											value = parentRect.right;
+										}
 									}
+
 									value = value + 'px';
 								} else {
 									value = source.getPropertyValue(name);
@@ -261,9 +270,9 @@
 							}
 							target.setProperty(name, value, priority);
 						});
-                    }
-                }
-            }
+					}
+				}
+			}
 
             function clonePseudoElements() {
                 [':before', ':after'].forEach(function (element) {
